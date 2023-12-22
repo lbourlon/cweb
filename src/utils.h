@@ -5,8 +5,8 @@
 
 /* SETTINGS */
 
-#define MAX_PAGE_SIZE 16
-#define BUFF_SIZE 1024
+#define MAX_PAGE_SIZE 24
+#define MSG_BUF_SIZE 1024
 
 /* MACROS */
 

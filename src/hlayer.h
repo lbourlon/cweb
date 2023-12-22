@@ -12,6 +12,6 @@ typedef enum {
 #ifndef HLAYER_HEADER
 #define HLAYER_HEADER
 
-int parse_http_request(char buf[BUFF_SIZE], char* out_path);
+int parse_http_request(char buf[MSG_BUF_SIZE], char* out_path);
 
 #endif

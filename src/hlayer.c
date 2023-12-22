@@ -4,10 +4,31 @@
 #include "hlayer.h"
 #include "utils.h"
 
+#define LOCATION_SIZE 16
+#define VERSION_SIZE 10
+
+#define BODY_SIZE MSG_BUF_SIZE - 4 - LOCATION_SIZE - VERSION_SIZE
+
+typedef enum http_method {
+    GET,
+    POST,
+    BOB,
+    NOT_IMPLEMENTED,
+} http_method;
+
+typedef struct request {
+    http_method method;
+    char location[LOCATION_SIZE];
+    char version[VERSION_SIZE];
+    char body[BODY_SIZE];
+} request;
+
 // TODO : change to parse in full and return result
 // this way it shouldn't call check_a
 /* Error on return != 0 */
-int parse_http_request(char buf[BUFF_SIZE], char* out_path) {
+int parse_http_request(char buf[MSG_BUF_SIZE], char* out_path) {
+    printf("full request : \n\n%s\n", buf);
+
     char* saveptr_lines;
     char* saveptr_spaces;
 
@@ -33,13 +54,11 @@ int parse_http_request(char buf[BUFF_SIZE], char* out_path) {
         return REQUEST_HTTP_VERSION_UNSUPORTED;
     }
     printf("[log] Version : %s\n", spaces);
+    #if 0
 
-    return REQUEST_OK;
-
-    #if 1
     // Interates through the next few lines of header, although it's not useful
     int i = 0;
-    while (lines != NULL && i < 3) {
+    while (lines != NULL && i < 10) {
         lines = strtok_r(NULL, "\r\n", &saveptr_lines);
         printf("[%2d] %s\n", i, lines);
         i += 1;

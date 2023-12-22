@@ -17,7 +17,7 @@
 #include "hlayer.h"
 
 #define LISTEN_BACKLOG 3
-#define NUM_PAGES 5
+#define NUM_PAGES 6
 
 // TODO moved int a wlayer
 int check_allowed_and_add_extension(char* out_path, const char* requested) {
@@ -28,7 +28,8 @@ int check_allowed_and_add_extension(char* out_path, const char* requested) {
         "/favicon.ico",
         "/error",
         "/ok",
-        "/index"
+        "/index",
+        "/image"
     };
 
     bool allowed = false;
@@ -73,8 +74,8 @@ int server_accept(int server_fd) {
 
     printf("[log] New connection from %s\n", inet_ntoa(client_addr.sin_addr));
 
-    char client_sent_buf[BUFF_SIZE] = {0};
-    int err = recv(client_fd, client_sent_buf,  BUFF_SIZE, 0);
+    char client_sent_buf[MSG_BUF_SIZE] = {0};
+    int err = recv(client_fd, client_sent_buf,  MSG_BUF_SIZE, 0);
     exit_on_err(err, "receive error");
 
     char requested_page[MAX_PAGE_SIZE] = {0};
@@ -88,7 +89,7 @@ int server_accept(int server_fd) {
     char file_path[MAX_PAGE_SIZE] = {0};
     int allowed = check_allowed_and_add_extension(file_path, requested_page);
 
-    char file_content[BUFF_SIZE] = {0};
+    char file_content[MSG_BUF_SIZE] = {0};
     int read_size = 0;
     if(allowed != 0) {
         read_size = read_file(file_content, "not_found.html");
@@ -104,7 +105,7 @@ int server_accept(int server_fd) {
     } else {
         send(client_fd, HTTP_OK, sizeof(HTTP_OK), 0);
     }
-    send(client_fd, file_content, BUFF_SIZE, 0);
+    send(client_fd, file_content, MSG_BUF_SIZE, 0);
 
     err = close(client_fd);
     exit_on_err(close(server_fd), "close");

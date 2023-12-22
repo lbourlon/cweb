@@ -14,7 +14,7 @@ int read_file(char* readbuf, const char* filename) {
     int fd = open(path, O_RDONLY);
     RETURN_ON_ERROR(fd) ;
 
-    int read_err =  read(fd, readbuf, BUFF_SIZE);
+    int read_err =  read(fd, readbuf, MSG_BUF_SIZE);
     check_error(read_err);
 
     RETURN_ON_ERROR(close(fd));
