@@ -3,10 +3,16 @@
 
 
 int main() {
+    
+    int server = server_setup();
+
     while (1) {
-        printf("\n");
-        int server_fd = server_setup();
-        server_accept(server_fd);        
+        printf("\n\nNEW LOOP\n");
+        int client = accept_client(server);        
+        
+        client_close(client);
     }
+
+    server_close(server);
     return 0;
 }

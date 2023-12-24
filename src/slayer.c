@@ -1,70 +1,25 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <sys/socket.h>
 #include <unistd.h>
 #include <netinet/ip.h>
-#include <string.h>
 #include <stdbool.h>
 
 // file reads
 #include <sys/stat.h>
 #include <fcntl.h>
 
+#include <assert.h>
+
 #include "utils.h"
 #include "slayer.h"
 #include "hlayer.h"
 
 #define LISTEN_BACKLOG 3
-#define NUM_PAGES 6
-
-// TODO moved int a wlayer
-int check_allowed_and_add_extension(char* out_path, const char* requested) {
-    printf("[log] Requested Path : '%s'\n", requested);
-
-    char allowed_paths[NUM_PAGES][MAX_PAGE_SIZE] = {
-        "/",
-        "/favicon.ico",
-        "/error",
-        "/ok",
-        "/index",
-        "/image"
-    };
-
-    bool allowed = false;
-    int p = 0;
-    while (p < NUM_PAGES && allowed != true) {
-        if(strncmp(requested, allowed_paths[p], MAX_PAGE_SIZE) == 0) {
-            allowed = true;
-            break;
-        }
-        p += 1;
-    }
-
-    if (allowed == false) {
-        printf("[ERROR] Requested not in list !\n");
-        return REQUEST_NOT_IN_ALLOWLIST;
-    }
-
-    // TODO : make clearear max_page_size, with or without extension
-    char* cp_err; char* cat_err;
-    if (p == 0) {
-        cp_err = strncpy(out_path, "/index.html", MAX_PAGE_SIZE);
-    } else if (p == 1) {
-        cp_err = strncpy(out_path, "/favicon.ico", MAX_PAGE_SIZE);
-    } else {
-        cp_err = strncpy(out_path, allowed_paths[p], MAX_PAGE_SIZE);
-        cat_err = strncat(out_path, ".html", MAX_PAGE_SIZE);
-    }
-
-    if (cp_err == NULL || cat_err == NULL) { return REQUEST_PROBLEM_WITH_STR; }
-
-    return REQUEST_OK;
-}
 
 
-int server_accept(int server_fd) {
+int accept_client(int server_fd) {
     struct sockaddr_in client_addr;
     socklen_t client_size = sizeof(client_addr);
 
@@ -92,24 +47,27 @@ int server_accept(int server_fd) {
     char file_content[MSG_BUF_SIZE] = {0};
     int read_size = 0;
     if(allowed != 0) {
-        read_size = read_file(file_content, "not_found.html");
-    } else {
-        read_size = read_file(file_content, file_path);
-    }
-
-    if(read_size == -1){
-        printf("[ERROR] Couldn't read file for some reason, TODO"); //TODO
+        read_size = read_file(file_content, "not_found.html", MSG_BUF_SIZE);
         send(client_fd, HTTP_ERROR, sizeof(HTTP_ERROR), 0);
-        // NOTE : Sending HTTP_OK for now because browser stalls otherwise
-        // send(client_fd, HTTP_OK, sizeof(HTTP_OK), 0);
     } else {
+        read_size = read_file(file_content, file_path, MSG_BUF_SIZE);
         send(client_fd, HTTP_OK, sizeof(HTTP_OK), 0);
     }
-    send(client_fd, file_content, MSG_BUF_SIZE, 0);
 
-    err = close(client_fd);
+    assert(read_size < MSG_BUF_SIZE);
+
+    printf("\n\n FILE : \n%s\n", file_content);
+    send(client_fd, file_content, read_size, 0);
+
+    return client_fd;
+}
+
+void client_close(int client_fd) {
+    exit_on_err(close(client_fd), "close");
+}
+
+void server_close(int server_fd) {
     exit_on_err(close(server_fd), "close");
-    return 0;
 }
 
 int server_setup() {

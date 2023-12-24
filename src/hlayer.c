@@ -9,24 +9,10 @@
 
 #define BODY_SIZE MSG_BUF_SIZE - 4 - LOCATION_SIZE - VERSION_SIZE
 
-typedef enum http_method {
-    GET,
-    POST,
-    BOB,
-    NOT_IMPLEMENTED,
-} http_method;
-
-typedef struct request {
-    http_method method;
-    char location[LOCATION_SIZE];
-    char version[VERSION_SIZE];
-    char body[BODY_SIZE];
-} request;
-
 // TODO : change to parse in full and return result
 // this way it shouldn't call check_a
 /* Error on return != 0 */
-int parse_http_request(char buf[MSG_BUF_SIZE], char* out_path) {
+int parse_http_request(char* buf, char* out_path) {
     printf("full request : \n\n%s\n", buf);
 
     char* saveptr_lines;
