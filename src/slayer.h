@@ -31,6 +31,7 @@ int server_setup();
 void server_close(int server_fd);
 void client_close(int server_fd);
 
+int client_interract(int client);
 int accept_client(int server_fd);
 int read_html_file(const char* filename, char* readbuf, const int buf_size);
 

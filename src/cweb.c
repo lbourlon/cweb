@@ -9,6 +9,7 @@ int main() {
     while (1) {
         printf("\n\nNEW LOOP\n");
         int client = accept_client(server);        
+        client_interract(client);
         
         client_close(client);
     }

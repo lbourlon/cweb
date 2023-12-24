@@ -18,46 +18,43 @@
 
 #define LISTEN_BACKLOG 3
 
+int client_interract(int client_fd) {
+    char client_sent_buf[MSG_BUF_SIZE] = {0};
+
+    int err = recv(client_fd, client_sent_buf,  MSG_BUF_SIZE, 0);
+    return_on_err_condition(err == -1);
+
+    char requested_page[MAX_PAGE_SIZE] = {0};
+    err = parse_http_request(client_sent_buf, requested_page);
+    return_on_err_condition(err == -1);
+
+    char file_path[MAX_PAGE_SIZE] = {0};
+    int allowed = check_allowed_and_add_extension(file_path, requested_page);
+    return_on_err_condition(allowed == -1);
+
+    char file_content[MSG_BUF_SIZE] = {0};
+    if(allowed) {
+        send(client_fd, HTTP_ERROR, sizeof(HTTP_ERROR), 0);
+    } else {
+        send(client_fd, HTTP_OK, sizeof(HTTP_OK), 0);
+    }
+
+    int read_size = read_file(file_content, file_path, MSG_BUF_SIZE);
+    return_on_err_condition(read_size > MSG_BUF_SIZE);
+
+    printf("\n\n FILE : \n%s\n", file_content);
+    send(client_fd, file_content, read_size, 0);
+    return 0;
+}
 
 int accept_client(int server_fd) {
     struct sockaddr_in client_addr;
     socklen_t client_size = sizeof(client_addr);
 
     int client_fd = accept(server_fd, (struct sockaddr *)&client_addr, &client_size);
-
-    exit_on_err(client_fd, "accept error");
+    return_on_err_condition(client_fd == -1);
 
     printf("[log] New connection from %s\n", inet_ntoa(client_addr.sin_addr));
-
-    char client_sent_buf[MSG_BUF_SIZE] = {0};
-    int err = recv(client_fd, client_sent_buf,  MSG_BUF_SIZE, 0);
-    exit_on_err(err, "receive error");
-
-    char requested_page[MAX_PAGE_SIZE] = {0};
-    int parse_err = parse_http_request(client_sent_buf, requested_page);
-
-    // TODO handle this gracefully
-    if(parse_err != 0) {
-        printf("[log] Could not parse HTTP request\n"); 
-    }
-
-    char file_path[MAX_PAGE_SIZE] = {0};
-    int allowed = check_allowed_and_add_extension(file_path, requested_page);
-
-    char file_content[MSG_BUF_SIZE] = {0};
-    int read_size = 0;
-    if(allowed != 0) {
-        read_size = read_file(file_content, "not_found.html", MSG_BUF_SIZE);
-        send(client_fd, HTTP_ERROR, sizeof(HTTP_ERROR), 0);
-    } else {
-        read_size = read_file(file_content, file_path, MSG_BUF_SIZE);
-        send(client_fd, HTTP_OK, sizeof(HTTP_OK), 0);
-    }
-
-    assert(read_size < MSG_BUF_SIZE);
-
-    printf("\n\n FILE : \n%s\n", file_content);
-    send(client_fd, file_content, read_size, 0);
 
     return client_fd;
 }
@@ -86,7 +83,9 @@ int server_setup() {
     int err = bind(server_fd,(struct sockaddr *) &server_addr, sizeof(server_addr));
     exit_on_err(err, "bind");
 
-    RETURN_ON_ERROR(listen(server_fd, LISTEN_BACKLOG));
+    err = listen(server_fd, LISTEN_BACKLOG);
+    exit_on_err(err, "listen");
+
     printf("[log] Listening on port (%d -> 80)\n", ntohs(server_addr.sin_port));
 
     return server_fd;

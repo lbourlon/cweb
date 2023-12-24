@@ -29,14 +29,10 @@ int check_allowed_and_add_extension(char* out_path, const char* requested) {
         p += 1;
     }
 
-    if (allowed == false) {
-        errno = REQUEST_PROBLEM_WITH_STR;
-        return -1;
-    }
-
-    // TODO : make clearear max_page_size, with or without extension
     char* cp_err; char* cat_err;
-    if (p == 0) {
+    if (allowed == false) {
+        cp_err = strncpy(out_path, "/not_found.html", MAX_PAGE_SIZE);
+    } else if (p == 0) {
         cp_err = strncpy(out_path, "/index.html", MAX_PAGE_SIZE);
     } else if (p == 1) {
         cp_err = strncpy(out_path, "/favicon.ico", MAX_PAGE_SIZE);
@@ -44,13 +40,14 @@ int check_allowed_and_add_extension(char* out_path, const char* requested) {
         cp_err = strncpy(out_path, allowed_paths[p], MAX_PAGE_SIZE);
         cat_err = strncat(out_path, ".html", MAX_PAGE_SIZE);
     }
+    // TODO : make clearear max_page_size, with or without extension
 
     if (cp_err == NULL || cat_err == NULL) {
         errno = REQUEST_PROBLEM_WITH_STR;
         return -1;
     }
 
-    return 0;
+    return allowed;
 }
 
 /* Returns -1 on error, size of read if not*/

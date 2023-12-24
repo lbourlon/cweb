@@ -24,6 +24,13 @@ typedef enum {
     }\
 }
 
+#define return_on_err_condition(condition) {\
+    if(condition) { \
+        fprintf(stderr, "ERROR (%s:%d) -- %s\n",__FILE__,__LINE__, strerror(errno));\
+        return -1;\
+    }\
+}
+
 #define RETURN_ON_ERROR(X) {\
     int __val = X;\
     if(__val == -1) { \
