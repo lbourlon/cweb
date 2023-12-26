@@ -4,40 +4,27 @@
 #include <errno.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 typedef enum {
-    REQUEST_OK,
-    REQUEST_TOKEN_IS_NULL,
-    REQUEST_METHOD_IS_NOT_GET,
-    REQUEST_NOT_IN_ALLOWLIST,
-    REQUEST_PROBLEM_WITH_STR,
-    REQUEST_HTTP_VERSION_UNSUPORTED,
-} request_parse_error;
+    HTTP_NO_ERR,
+    HTTP_VERSION_UNSUPORTED,
+    HTTP_METHOD_UNSUPORTED
+} cweb_err;
 
 
 #define MAX_PAGE_SIZE 24
 
-#define check_error(X) {\
-    int __val = X;\
-    if(__val == -1) { \
-    fprintf(stderr, "ERROR (%s:%d) -- %s\n",__FILE__,__LINE__, strerror(errno));\
-    }\
-}
+#define exit_on_err(err, msg) if(err==-1) { perror(msg); exit(EXIT_FAILURE); };
 
-#define return_on_err_condition(condition) {\
+#define return_on_err(condition, msg) \
     if(condition) { \
-        fprintf(stderr, "ERROR (%s:%d) -- %s\n",__FILE__,__LINE__, strerror(errno));\
-        return -1;\
-    }\
-}
+        fprintf(stderr, "[ERROR] n°%d @%s:%d -- %s\n",errno, __FILE__,__LINE__, msg);\
+        return -1;}
 
-#define RETURN_ON_ERROR(X) {\
-    int __val = X;\
-    if(__val == -1) { \
-    fprintf(stderr, "ERROR (%s:%d) -- %s\n",__FILE__,__LINE__, strerror(errno));\
-    return -1;\
-    }\
-}
+#define return_and_set_erno(condition, err_no) if(condition) { errno = err_no;  return -1;}
+
+#define log(...) printf(__VA_ARGS__)
 
 /* FUNCTIONS */
 int check_allowed_and_add_extension(char* out_path, const char* requested);

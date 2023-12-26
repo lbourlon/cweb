@@ -1,9 +1,7 @@
+#include "utils.h"
 #include <fcntl.h>
 #include <stdbool.h>
-#include <stdio.h>
-#include <string.h>
 #include <unistd.h>
-#include "utils.h"
 
 #define NUM_PAGES 6
 
@@ -42,10 +40,7 @@ int check_allowed_and_add_extension(char* out_path, const char* requested) {
     }
     // TODO : make clearear max_page_size, with or without extension
 
-    if (cp_err == NULL || cat_err == NULL) {
-        errno = REQUEST_PROBLEM_WITH_STR;
-        return -1;
-    }
+    return_on_err(cp_err == NULL || cat_err == NULL, "Error on strfunc");
 
     return allowed;
 }
@@ -57,12 +52,12 @@ int read_file(char* readbuf, const char* filename, const int max_readsize) {
 
     printf("[log] Reading path %s\n", path);
     int fd = open(path, O_RDONLY);
-    RETURN_ON_ERROR(fd) ;
+    return_on_err(fd == -1, "Couldn't open file");
 
-    int read_err =  read(fd, readbuf, max_readsize);
-    check_error(read_err);
+    int read_err = read(fd, readbuf, max_readsize);
+    return_on_err(read_err == -1, "Couldn't read file");
 
-    RETURN_ON_ERROR(close(fd));
+    return_on_err(close(fd) == -1, "Couldn't Close file");
 
     return read_err;
 }

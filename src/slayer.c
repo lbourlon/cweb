@@ -1,8 +1,9 @@
 #include <arpa/inet.h>
+#include <errno.h>
 #include <netinet/in.h>
 #include <stdio.h>
-#include <sys/socket.h>
 #include <unistd.h>
+#include <sys/socket.h>
 #include <netinet/ip.h>
 #include <stdbool.h>
 
@@ -10,69 +11,129 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#include <assert.h>
+// Parse http_rq
+#include <stdio.h>
+#include <string.h>
 
 #include "utils.h"
 #include "slayer.h"
-#include "hlayer.h"
 
 #define LISTEN_BACKLOG 3
 
-int client_interract(int client_fd) {
+#define LOCATION_SIZE 16
+#define VERSION_SIZE 10
+
+#define BODY_SIZE MSG_BUF_SIZE - 4 - LOCATION_SIZE - VERSION_SIZE
+
+/*
+ * TODO change error return into erno
+ */
+int parse_http_header (char* buf, char* out_path) {
+    // printf("full request : \n\n%s\n", buf);
+
+    char* saveptr_lines;
+    char* saveptr_spaces;
+
+    char* lines = strtok_r(buf, "\r\n", &saveptr_lines);
+
+    /* TODO, this should cause a change in response for unsuported method */
+    char* spaces = strtok_r(lines, " ", &saveptr_spaces);
+    int cmp = strncmp(spaces, "HEAD", 3);
+    return_and_set_erno(cmp != 0, HTTP_METHOD_UNSUPORTED);
+
+    spaces = strtok_r(NULL, " ", &saveptr_spaces);
+    cmp = strncmp(spaces, "/", 1);
+    return_on_err(cmp != 0, "Request page does not start with '/'");
+    strncpy(out_path, spaces, MAX_PAGE_SIZE);
+
+    spaces = strtok_r(NULL, " ", &saveptr_spaces);
+
+    cmp = strncmp(spaces, "HTTP", 4);
+    return_and_set_erno(cmp != 0, HTTP_VERSION_UNSUPORTED);
+    
+    printf("[log] Version : %s\n", spaces);
+    #if 0 // iterates through rest of lines
+    int i = 0;
+    while (lines != NULL && i < 10) {
+        lines = strtok_r(NULL, "\r\n", &saveptr_lines);
+        printf("[%2d] %s\n", i, lines);
+        i += 1;
+    }
+    #endif
+
+    return HTTP_NO_ERR;
+}
+
+int client_interract(int client) {
     char client_sent_buf[MSG_BUF_SIZE] = {0};
 
-    int err = recv(client_fd, client_sent_buf,  MSG_BUF_SIZE, 0);
-    return_on_err_condition(err == -1);
+    int err = recv(client, client_sent_buf,  MSG_BUF_SIZE, 0);
+    return_on_err(err == -1, "Socket receive failed");
 
     char requested_page[MAX_PAGE_SIZE] = {0};
-    err = parse_http_request(client_sent_buf, requested_page);
-    return_on_err_condition(err == -1);
-
+    err = parse_http_header(client_sent_buf, requested_page);
+    if(err == -1) {
+        switch (errno) {
+            case HTTP_VERSION_UNSUPORTED:
+                send(client, HTTP_WRONG_VERSION, sizeof(HTTP_WRONG_VERSION), 0);
+                return_on_err(err == -1, "HTTP version Unsuported");
+                break;
+            case HTTP_METHOD_UNSUPORTED:
+                send(client, HTTP_WRONG_METHOD, sizeof(HTTP_WRONG_METHOD), 0);
+                return_on_err(err == -1, "HTTP method Unsuported");
+                break;
+        }
+    }
+    
     char file_path[MAX_PAGE_SIZE] = {0};
     int allowed = check_allowed_and_add_extension(file_path, requested_page);
-    return_on_err_condition(allowed == -1);
+    if(allowed == -1) {return -1;};
 
     char file_content[MSG_BUF_SIZE] = {0};
     if(allowed) {
-        send(client_fd, HTTP_ERROR, sizeof(HTTP_ERROR), 0);
+        send(client, HTTP_NOT_FOUND, sizeof(HTTP_NOT_FOUND), 0);
     } else {
-        send(client_fd, HTTP_OK, sizeof(HTTP_OK), 0);
+        send(client, HTTP_OK, sizeof(HTTP_OK), 0);
     }
 
     int read_size = read_file(file_content, file_path, MSG_BUF_SIZE);
-    return_on_err_condition(read_size > MSG_BUF_SIZE);
+    if(read_size == -1) {return -1;};
 
-    printf("\n\n FILE : \n%s\n", file_content);
-    send(client_fd, file_content, read_size, 0);
+    // printf("\n\n FILE : \n%s\n", file_content);
+    err = send(client, file_content, read_size, 0);
+
+    return_on_err(err == -1, "Couldn't send file");
     return 0;
 }
 
-int accept_client(int server_fd) {
+int accept_client(int server) {
     struct sockaddr_in client_addr;
     socklen_t client_size = sizeof(client_addr);
 
-    int client_fd = accept(server_fd, (struct sockaddr *)&client_addr, &client_size);
-    return_on_err_condition(client_fd == -1);
+    int client = accept(server, (struct sockaddr *)&client_addr, &client_size);
+    return_on_err(client == -1, "Could not accept client");
 
     printf("[log] New connection from %s\n", inet_ntoa(client_addr.sin_addr));
 
-    return client_fd;
+    return client;
 }
 
-void client_close(int client_fd) {
-    exit_on_err(close(client_fd), "close");
+int client_close(int client) {
+    int err = close(client);
+    return_on_err(err == -1, "Cloudn't close client");
+    return err;
 }
 
-void server_close(int server_fd) {
-    exit_on_err(close(server_fd), "close");
+void server_close(int server) {
+    exit_on_err(close(server), "Cloudn't close server");
 }
 
 int server_setup() {
-    int server_fd = socket(AF_INET, SOCK_STREAM, 0);
-    exit_on_err(server_fd, "socket");
+    int server = socket(AF_INET, SOCK_STREAM, 0);
+    exit_on_err(server, "socket");
 
     int option = 1;
-    setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option));
+    setsockopt(server, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option));
 
     struct sockaddr_in server_addr = {
         .sin_family = AF_INET,
@@ -80,13 +141,13 @@ int server_setup() {
         .sin_addr.s_addr = INADDR_ANY,
     };
 
-    int err = bind(server_fd,(struct sockaddr *) &server_addr, sizeof(server_addr));
+    int err = bind(server,(struct sockaddr *) &server_addr, sizeof(server_addr));
     exit_on_err(err, "bind");
 
-    err = listen(server_fd, LISTEN_BACKLOG);
+    err = listen(server, LISTEN_BACKLOG);
     exit_on_err(err, "listen");
 
     printf("[log] Listening on port (%d -> 80)\n", ntohs(server_addr.sin_port));
 
-    return server_fd;
+    return server;
 }
