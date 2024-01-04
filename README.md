@@ -2,11 +2,6 @@
 
 The idea for cweb :
 
-```python
-for i in range(0, 100):
-    print("good things happen who those who're brave")
-```
-
 * wlayer -> Actual Website logic
 * hlayer -> Implements what's needed for the HTTP communication.
 * slayer -> Implements the socket communication interface. 
