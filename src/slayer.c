@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "html.h"
 #include "utils.h"
 #include "slayer.h"
 
@@ -99,18 +100,16 @@ int client_interract(int client) {
     int allowed_index = check_allowed(allowed_paths, requested_page);
 
     if(allowed_index == -1) {
-        strncpy(file_path, "/not_found.html", MAX_PAGE_SIZE);
         send(client, HTTP_NOT_FOUND, sizeof(HTTP_NOT_FOUND), 0);
-    } else {
-        add_extension(allowed_paths, file_path, allowed_index);
-        send(client, HTTP_OK, sizeof(HTTP_OK), 0);
-    };
-
+        send(client, not_found, sizeof(not_found), 0);
+        return 0;
+    }
+    add_extension(allowed_paths, file_path, allowed_index);
+    send(client, HTTP_OK, sizeof(HTTP_OK), 0);
 
     int read_size = read_file(file_content, file_path, MSG_BUF_SIZE);
     if(read_size == -1) {return -1;};
 
-    // printf("\n\n FILE : \n%s\n", file_content);
     err = send(client, file_content, read_size, 0);
 
     return_on_err(err == -1, "Couldn't send file");
