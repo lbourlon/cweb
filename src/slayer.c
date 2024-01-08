@@ -27,13 +27,17 @@
 #define BODY_SIZE MSG_BUF_SIZE - 4 - LOCATION_SIZE - VERSION_SIZE
 
 const char allowed_paths[NUM_PAGES][MAX_PAGE_SIZE] = {
-        "/",
-        "/favicon.ico",
-        "/error",
-        "/ok",
-        "/index",
-        "/image"
-    };
+    "/",
+    "/index",
+    "/error",
+    "/ok",
+};
+
+const char* index_html =
+    base_start 
+    "<h1>does this work in c?</h1>"
+    "<p>This is cweb.</p>"
+    base_end;
 
 /*
  * TODO change error return into erno
@@ -104,8 +108,14 @@ int client_interract(int client) {
         send(client, not_found, sizeof(not_found), 0);
         return 0;
     }
-    add_extension(allowed_paths, file_path, allowed_index);
+
     send(client, HTTP_OK, sizeof(HTTP_OK), 0);
+    if(allowed_index == 0) {
+        send(client, index_html, strlen(index_html) * sizeof(index_html[0]), 0);
+        return 0;
+    }
+
+    add_extension(allowed_paths, file_path, allowed_index);
 
     int read_size = read_file(file_content, file_path, MSG_BUF_SIZE);
     if(read_size == -1) {return -1;};

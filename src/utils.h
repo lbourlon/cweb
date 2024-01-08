@@ -14,7 +14,7 @@ typedef enum {
 
 
 #define MAX_PAGE_SIZE 24
-#define NUM_PAGES 6
+#define NUM_PAGES 4
 
 #define exit_on_err(err, msg) if(err==-1) { perror(msg); exit(EXIT_FAILURE); };
 
