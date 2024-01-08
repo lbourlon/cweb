@@ -3,46 +3,30 @@
 #include <stdbool.h>
 #include <unistd.h>
 
-#define NUM_PAGES 6
 
-int check_allowed_and_add_extension(char* out_path, const char* requested) {
+
+int check_allowed(const char allowed_paths[NUM_PAGES][MAX_PAGE_SIZE], const char* requested) {
     printf("[log] Requested Path : '%s'\n", requested);
 
-    char allowed_paths[NUM_PAGES][MAX_PAGE_SIZE] = {
-        "/",
-        "/favicon.ico",
-        "/error",
-        "/ok",
-        "/index",
-        "/image"
-    };
-
-    bool allowed = false;
-    int p = 0;
-    while (p < NUM_PAGES && allowed != true) {
-        if(strncmp(requested, allowed_paths[p], MAX_PAGE_SIZE) == 0) {
-            allowed = true;
-            break;
+    for (int i = 0; i < NUM_PAGES; i++) {
+        if(strncmp(requested, allowed_paths[i], MAX_PAGE_SIZE) == 0) {
+            return i;
         }
-        p += 1;
     }
+    return -1;
+}
 
+int add_extension(const char allowed_paths[NUM_PAGES][MAX_PAGE_SIZE], char* out_path, int i) {
     char* cp_err; char* cat_err;
-    if (allowed == false) {
-        cp_err = strncpy(out_path, "/not_found.html", MAX_PAGE_SIZE);
-    } else if (p == 0) {
+    if (i == 0) {
         cp_err = strncpy(out_path, "/index.html", MAX_PAGE_SIZE);
-    } else if (p == 1) {
-        cp_err = strncpy(out_path, "/favicon.ico", MAX_PAGE_SIZE);
     } else {
-        cp_err = strncpy(out_path, allowed_paths[p], MAX_PAGE_SIZE);
+        cp_err = strncpy(out_path, allowed_paths[i], MAX_PAGE_SIZE);
         cat_err = strncat(out_path, ".html", MAX_PAGE_SIZE);
     }
-    // TODO : make clearear max_page_size, with or without extension
 
     return_on_err(cp_err == NULL || cat_err == NULL, "Error on strfunc");
-
-    return allowed;
+    return 0;
 }
 
 /* Returns -1 on error, size of read if not*/

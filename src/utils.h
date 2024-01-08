@@ -14,6 +14,7 @@ typedef enum {
 
 
 #define MAX_PAGE_SIZE 24
+#define NUM_PAGES 6
 
 #define exit_on_err(err, msg) if(err==-1) { perror(msg); exit(EXIT_FAILURE); };
 
@@ -27,7 +28,8 @@ typedef enum {
 #define log(...) printf(__VA_ARGS__)
 
 /* FUNCTIONS */
-int check_allowed_and_add_extension(char* out_path, const char* requested);
+int check_allowed(const char allowed_paths[NUM_PAGES][MAX_PAGE_SIZE], const char* requested);
+int add_extension(const char allowed_paths[NUM_PAGES][MAX_PAGE_SIZE], char* out_path, int i);
 int read_file(char* readbuf, const char* filename, const int max_readsize);
 
 #endif

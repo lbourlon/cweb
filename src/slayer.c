@@ -25,6 +25,15 @@
 
 #define BODY_SIZE MSG_BUF_SIZE - 4 - LOCATION_SIZE - VERSION_SIZE
 
+const char allowed_paths[NUM_PAGES][MAX_PAGE_SIZE] = {
+        "/",
+        "/favicon.ico",
+        "/error",
+        "/ok",
+        "/index",
+        "/image"
+    };
+
 /*
  * TODO change error return into erno
  */
@@ -38,7 +47,7 @@ int parse_http_header (char* buf, char* out_path) {
 
     /* TODO, this should cause a change in response for unsuported method */
     char* spaces = strtok_r(lines, " ", &saveptr_spaces);
-    int cmp = strncmp(spaces, "HEAD", 3);
+    int cmp = strncmp(spaces, "GET", 3);
     return_and_set_erno(cmp != 0, HTTP_METHOD_UNSUPORTED);
 
     spaces = strtok_r(NULL, " ", &saveptr_spaces);
@@ -86,15 +95,17 @@ int client_interract(int client) {
     }
     
     char file_path[MAX_PAGE_SIZE] = {0};
-    int allowed = check_allowed_and_add_extension(file_path, requested_page);
-    if(allowed == -1) {return -1;};
-
     char file_content[MSG_BUF_SIZE] = {0};
-    if(allowed) {
+    int allowed_index = check_allowed(allowed_paths, requested_page);
+
+    if(allowed_index == -1) {
+        strncpy(file_path, "/not_found.html", MAX_PAGE_SIZE);
         send(client, HTTP_NOT_FOUND, sizeof(HTTP_NOT_FOUND), 0);
     } else {
+        add_extension(allowed_paths, file_path, allowed_index);
         send(client, HTTP_OK, sizeof(HTTP_OK), 0);
-    }
+    };
+
 
     int read_size = read_file(file_content, file_path, MSG_BUF_SIZE);
     if(read_size == -1) {return -1;};
