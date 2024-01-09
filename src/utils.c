@@ -4,9 +4,8 @@
 #include <unistd.h>
 
 
-
 int check_allowed(const char allowed_paths[NUM_PAGES][MAX_PAGE_SIZE], const char* requested) {
-    printf("[log] Requested Path : '%s'\n", requested);
+    mc_debug_print("[log] Requested Path : '%s'\n", requested);
 
     for (int i = 0; i < NUM_PAGES; i++) {
         if(strncmp(requested, allowed_paths[i], MAX_PAGE_SIZE) == 0) {
@@ -34,7 +33,7 @@ int read_file(char* readbuf, const char* filename, const int max_readsize) {
     char path[7 + MAX_PAGE_SIZE] =  "./files/";
     strncat(path, filename, MAX_PAGE_SIZE);
 
-    printf("[log] Reading path %s\n", path);
+    mc_debug_print("[log] Reading path %s\n", path);
     int fd = open(path, O_RDONLY);
     return_on_err(fd == -1, "Couldn't open file");
 

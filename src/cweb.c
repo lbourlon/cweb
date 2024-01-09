@@ -1,6 +1,5 @@
 #include "slayer.h"
-#include <stdio.h>
-#include "html.h"
+#include "utils.h"
 
 
 int main() {
@@ -8,7 +7,7 @@ int main() {
     int server = server_setup();
 
     while (1) {
-        printf("\n\nNEW LOOP\n");
+        mc_debug_print("\n\nNEW LOOP\n");
         int client = accept_client(server);        
         client_interract(client);
         

@@ -6,6 +6,15 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+
+#ifdef DEBUG_PRINT
+#define mc_debug_print(...) printf(__VA_ARGS__)
+#else
+#define mc_debug_print(...) //
+#endif
+
+
+
 typedef enum {
     HTTP_NO_ERR,
     HTTP_VERSION_UNSUPORTED,

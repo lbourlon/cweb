@@ -43,7 +43,7 @@ const char* index_html =
  * TODO change error return into erno
  */
 int parse_http_header (char* buf, char* out_path) {
-    // printf("full request : \n\n%s\n", buf);
+    // mc_debug_print("full request : \n\n%s\n", buf);
 
     char* saveptr_lines;
     char* saveptr_spaces;
@@ -65,12 +65,12 @@ int parse_http_header (char* buf, char* out_path) {
     cmp = strncmp(spaces, "HTTP", 4);
     return_and_set_erno(cmp != 0, HTTP_VERSION_UNSUPORTED);
     
-    printf("[log] Version : %s\n", spaces);
+    mc_debug_print("[log] Version : %s\n", spaces);
     #if 0 // iterates through rest of lines
     int i = 0;
     while (lines != NULL && i < 10) {
         lines = strtok_r(NULL, "\r\n", &saveptr_lines);
-        printf("[%2d] %s\n", i, lines);
+        mc_debug_print("[%2d] %s\n", i, lines);
         i += 1;
     }
     #endif
@@ -133,7 +133,7 @@ int accept_client(int server) {
     int client = accept(server, (struct sockaddr *)&client_addr, &client_size);
     return_on_err(client == -1, "Could not accept client");
 
-    printf("[log] New connection from %s\n", inet_ntoa(client_addr.sin_addr));
+    mc_debug_print("[log] New connection from %s\n", inet_ntoa(client_addr.sin_addr));
 
     return client;
 }
@@ -167,7 +167,7 @@ int server_setup() {
     err = listen(server, LISTEN_BACKLOG);
     exit_on_err(err, "listen");
 
-    printf("[log] Listening on port (%d -> 80)\n", ntohs(server_addr.sin_port));
+    printf("[log] Listening on port %d\n", ntohs(server_addr.sin_port));
 
     return server;
 }
