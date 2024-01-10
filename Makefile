@@ -9,4 +9,7 @@ default : $(REQ)
 release : $(REQ)
 	gcc -o cweb $^ $(FLAGS) $(LIBS) -O3
 
+perf :
+	python perf/run_httperf.py
 
+.PHONY: perf

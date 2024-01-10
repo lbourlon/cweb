@@ -43,6 +43,7 @@ plt.plot(x, y, linestyle = "", marker = "+")
 plt.title("Cweb Performance")
 plt.xlabel("target req/s")
 plt.ylabel("actual req/s")
-
-plt.savefig("perf/cweb_perf.svgz");
+plt.savefig("perf/cweb_perf.svg");
 plt.show()
+
+

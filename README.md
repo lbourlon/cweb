@@ -13,4 +13,4 @@ The idea for cweb :
 
 This is in progress mostly not looking into numbers
 
-![cweb httperf](perf/cweb_perf.svgz)
+![cweb httperf](perf/cweb_perf.svg)
