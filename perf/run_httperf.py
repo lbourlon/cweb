@@ -39,4 +39,10 @@ for rate in range(step, number_of_tests * step + 1 , step ):
 
 
 plt.plot(x, y, linestyle = "", marker = "+")
+
+plt.title("Cweb Performance")
+plt.xlabel("target req/s")
+plt.ylabel("actual req/s")
+
+plt.savefig("perf/cweb_perf.svgz");
 plt.show()

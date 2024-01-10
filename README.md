@@ -2,8 +2,15 @@
 
 The idea for cweb :
 
-* wlayer -> Actual Website logic
-* hlayer -> Implements what's needed for the HTTP communication.
-* slayer -> Implements the socket communication interface. 
+* Mostly have fun
+* Very fast & light, but no threads or forks
+* Only implement what's needed from the HTTP standard
 
-currently this is still a bit jumbled
+* Ways to build html with styles on runtime AND / OR comptime
+* Potentially rewrite things in different languages ?
+
+# Performance
+
+This is in progress mostly not looking into numbers
+
+![cweb httperf](perf/cweb_perf.svgz)
