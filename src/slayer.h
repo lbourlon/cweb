@@ -8,8 +8,7 @@
 #define RECV_BUF_SIZE 2048 
 
 #define MAX_PAGE_SIZE 24
-#define NUM_PAGES 5
-
+#define NUM_PAGES 7
 
 typedef enum {
     HTTP_NO_ERR,
@@ -34,7 +33,6 @@ typedef struct http_request {
     content_type content_type;
     char page[MAX_PAGE_SIZE];
 } http_request;
-
 
 /* HTTP STUFF */
 

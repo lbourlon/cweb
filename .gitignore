@@ -28,6 +28,11 @@
 *.so.*
 *.dylib
 
+# images not for graphs
+*.png
+*.jpeg
+*.wpeg
+
 # Executables
 *.exe
 *.out

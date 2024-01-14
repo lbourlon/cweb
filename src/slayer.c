@@ -29,9 +29,11 @@
 const char allowed_paths[NUM_PAGES][MAX_PAGE_SIZE] = {
     "/",
     "/index",
-    "/error",
+    "/rick",
     "/ok",
+    "/perf",
     "/images/rick.webp",
+    "/images/perf.svg"
 };
 
 const char* index_html =

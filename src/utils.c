@@ -2,6 +2,7 @@
 #include "slayer.h"
 #include <fcntl.h>
 #include <stdbool.h>
+#include <string.h>
 #include <unistd.h>
 #include <sys/stat.h>
 
@@ -42,7 +43,8 @@ int better_read_file(char* out_buf, const char* path, const int max_size)
     mc_debug_print("Actual read : %d", err);
 
     return_on_err(fclose(file) == -1, "Couldn't Close file");
-    return 0;
+
+    return err;
 }
 
 int build_response(char* out_buf, int max_size, const http_request* rq)
@@ -58,7 +60,20 @@ int build_response(char* out_buf, int max_size, const http_request* rq)
     int header_size, new_start;
     if(rq->content_type == IMAGE)
     {
-        const char* image_type = "image/webp";
+        const char* image_type;
+
+        if(strstr(rq->page, ".webp") != NULL){
+            image_type = "image/webp";
+        }
+        else if(strstr(rq->page, ".png") != NULL) {
+            image_type = "image/png";
+        }
+        else if(strstr(rq->page, ".svg") != NULL) { 
+            image_type = "image/svg+xml";
+        } else {
+            return -1;
+        }
+
         header_size = sizeof(HTTP_IMAGE_HEADER_FSTR) - 5 + strlen(image_type) + strlen("9999999");
 
         new_start = snprintf(out_buf, header_size, HTTP_IMAGE_HEADER_FSTR, image_type, st.st_size);
@@ -68,11 +83,19 @@ int build_response(char* out_buf, int max_size, const http_request* rq)
         header_size = sizeof(HTTP_OK);
         new_start = snprintf(out_buf, header_size, HTTP_OK);
     }
+    return_on_err(new_start == -1, "Couldn't snprintf file");
 
     int remaining_space = max_size - header_size;
-    mc_debug_print("Initial write : %d\n", initial_write);
-    return_on_err(new_start == -1, "Couldn't snprintf file");
     return_on_err(new_start + st.st_size > max_size, "file wouldn't fit in buffer");
+
+    if(rq->content_type != IMAGE)
+    {
+        int bytes_writen = better_read_file(&out_buf[new_start], "./files/nav.html", remaining_space);
+        return_on_err(bytes_writen == -1, "Coulnd't write nav");
+
+        remaining_space -= bytes_writen;
+        new_start += bytes_writen;
+    }
 
     err = better_read_file(&out_buf[new_start], path, remaining_space);
 
