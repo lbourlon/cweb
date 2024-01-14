@@ -5,6 +5,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include "slayer.h"
 
 
 #ifdef DEBUG_PRINT
@@ -12,18 +13,6 @@
 #else
 #define mc_debug_print(...) //
 #endif
-
-
-
-typedef enum {
-    HTTP_NO_ERR,
-    HTTP_VERSION_UNSUPORTED,
-    HTTP_METHOD_UNSUPORTED
-} cweb_err;
-
-
-#define MAX_PAGE_SIZE 24
-#define NUM_PAGES 4
 
 #define exit_on_err(err, msg) if(err==-1) { perror(msg); exit(EXIT_FAILURE); };
 
@@ -38,7 +27,10 @@ typedef enum {
 
 /* FUNCTIONS */
 int check_allowed(const char allowed_paths[NUM_PAGES][MAX_PAGE_SIZE], const char* requested);
+
 int add_extension(const char allowed_paths[NUM_PAGES][MAX_PAGE_SIZE], char* out_path, int i);
+
 int read_file(char* readbuf, const char* filename, const int max_readsize);
 
+int build_response(char* out_buf, int max_size, const http_request* rq);
 #endif
