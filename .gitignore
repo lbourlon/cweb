@@ -41,12 +41,17 @@
 *.x86_64
 *.hex
 cweb
+zweb
 
 # Debug files
 *.dSYM/
 *.su
 *.idb
 *.pdb
+
+#zig
+zig-out/
+zig-cache/
 
 # Kernel Module Compile Results
 *.mod*
@@ -56,3 +61,5 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+*.json
+clangd
