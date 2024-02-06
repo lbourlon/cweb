@@ -155,7 +155,7 @@ int accept_client(int server) {
     struct sockaddr_in client_addr;
     socklen_t client_size = sizeof(client_addr);
 
-    int client = accept(server, (struct sockaddr *)&client_addr, &client_size);
+    int client = accept(server, (struct sockaddr *) &client_addr, &client_size);
     return_on_err(client == -1, "Could not accept client");
 
     mc_debug_print("New connection from %s\n", inet_ntoa(client_addr.sin_addr));
@@ -177,8 +177,7 @@ int server_setup() {
     int server = socket(AF_INET, SOCK_STREAM, 0);
     exit_on_err(server, "socket");
 
-    int option = 1;
-    setsockopt(server, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option));
+    setsockopt(server, SOL_SOCKET, SO_REUSEADDR, &(int){1}, sizeof(int));
 
     struct sockaddr_in server_addr = {
         .sin_family = AF_INET,
