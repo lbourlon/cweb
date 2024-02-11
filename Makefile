@@ -1,13 +1,12 @@
-FLAGS=-Wall -Werror -Wextra -pg
+FLAGS=-Wall -Werror -Wextra -pg -ggdb
 SECURE=-fsanitize=safe-stack -fstack-protector-all 
-LIBS=-lc
-# CC=clang
-CC=zig cc
+CC=clang
 
-REQ = csrc/cweb.c csrc/slayer.c csrc/utils.c 
+REQ = C/cweb.c C/slayer.c
 
 default : $(REQ)
-	$(CC) -o cweb $^ $(FLAGS) $(LIBS) -DDEBUG_PRINT
+	$(CC) -o cweb $^ $(FLAGS) $(LIBS) -DDEBUG_PRINT \
+		-MJ compile_commands.json
 
 release : $(REQ)
 	$(CC) -o cweb $^ $(FLAGS) $(LIBS) -O3 $(SECURE)
@@ -15,7 +14,5 @@ release : $(REQ)
 perf :
 	python perf/run_httperf.py
 
-zig :
-	zig build init	
 
 .PHONY: perf

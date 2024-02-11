@@ -17,14 +17,13 @@ fn parse_http(raw_buf: [BUFF_SIZE]u8) !u32 {
     const path: []const u8 = spaces.next().?;
     const vers: []const u8 = spaces.next().?;
 
-    if (mem.eql(u8, meth, "GET")) {
+    if (!mem.eql(u8, meth, "GET")) {
         return 1;
     }
-
-    if (mem.eql(u8, path, "/")) {
+    if (!mem.eql(u8, path, "/")) {
         return 1;
     }
-    if (mem.eql(u8, vers, "HTTP/1.1")) {
+    if (!mem.eql(u8, vers, "HTTP/1.1")) {
         return 1;
     }
 

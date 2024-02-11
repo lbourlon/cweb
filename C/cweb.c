@@ -1,6 +1,4 @@
 #include "slayer.h"
-#include "utils.h"
-
 
 int main() {
     

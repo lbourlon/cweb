@@ -3,7 +3,7 @@ const std = @import("std");
 pub fn build(b: *std.Build) void {
     const exe = b.addExecutable(.{
         .name = "zweb",
-        .root_source_file = .{ .path = "zsrc/zweb.zig" },
+        .root_source_file = .{ .path = "zig/zweb.zig" },
         .target = b.host,
     });
 
