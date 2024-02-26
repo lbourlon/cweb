@@ -59,11 +59,9 @@ int _parse_first_http_line(char* recv_buf, http_request* rq) {
     return_on_err(token == NULL, "Couldn't tokenize");
 
     memcpy(rq->url, token, MAX_PAGE_SIZE);
-    return 0;
-}
 
-int send_not_found(int client) {
-    send(client, HTTP_NOT_FOUND_404, sizeof(HTTP_NOT_FOUND_404), 0);
+    rq->content_type = strncmp(rq->url, "/images/", 8) ? HTML : IMAGE;
+    return 0;
 }
 
 int client_interract(int client) {
@@ -74,8 +72,6 @@ int client_interract(int client) {
 
     http_request rq = {0};
     _parse_first_http_line(client_sent_buf, &rq);
-
-    rq.content_type = strncmp(rq.url, "/images/", 8) ? HTML : IMAGE;
 
     int allowed_index = check_allowed(allowed_paths, &rq);
     if (allowed_index == -1) {
@@ -109,6 +105,7 @@ int accept_client(int server) {
 
     int client = accept(server, (struct sockaddr *) &client_addr, &client_size);
     return_on_err(client == -1, "Could not accept client");
+
 
     mc_debug_print("New connection from %s\n", inet_ntoa(client_addr.sin_addr));
 
@@ -166,7 +163,7 @@ int add_extension(const char allowed_paths[NUM_PAGES][MAX_PAGE_SIZE], http_reque
     return 0;
 }
 
-int better_read_file(char* out_buf, const char* path, const int max_size)
+int read_file(char* out_buf, const char* path, const int max_size)
 {
     FILE* file = fopen(path, "r");
     return_on_err(file == NULL, "Couldn't open file");
@@ -222,14 +219,14 @@ int build_response(char* out_buf, int max_size, const http_request* rq)
 
     if(rq->content_type != IMAGE)
     {
-        int bytes_writen = better_read_file(&out_buf[new_start], "./files/nav.html", remaining_space);
+        int bytes_writen = read_file(&out_buf[new_start], "./files/nav.html", remaining_space);
         return_on_err(bytes_writen == -1, "Coulnd't write nav");
 
         remaining_space -= bytes_writen;
         new_start += bytes_writen;
     }
 
-    err = better_read_file(&out_buf[new_start], path, remaining_space);
+    err = read_file(&out_buf[new_start], path, remaining_space);
 
     return err;
 }

@@ -5,8 +5,29 @@ const stdout = std.io.getStdOut().writer();
 const heap_alloc = std.heap.page_allocator;
 
 const BUFF_SIZE: u16 = 8192;
+const MAX_PAGE_SIZE: u16 = 24;
 
-fn parse_http(raw_buf: [BUFF_SIZE]u8) !u32 {
+const content_type = enum {
+    HTML,
+    IMAGE,
+};
+
+const method = enum {
+    GET,
+    HEAD,
+};
+
+const http_request = struct {
+    method: method = method.GET,
+    content_type: content_type = content_type.HTML,
+    url: [MAX_PAGE_SIZE]u8,
+
+    pub fn print(self: http_request) !void {
+        try stdout.print("[{s}][{s}][{s}]\n", .{ self.method, self.content_type, self.url });
+    }
+};
+
+fn parse_http(raw_buf: [BUFF_SIZE]u8) !http_request {
     var lines = mem.split(u8, &raw_buf, "\r\n");
     const first_line: []const u8 = lines.first();
 
@@ -27,8 +48,17 @@ fn parse_http(raw_buf: [BUFF_SIZE]u8) !u32 {
         return 1;
     }
 
-    try stdout.print("[{s}][{s}][{s}]\n", .{ meth, path, vers });
-    return 0;
+    var rq = http_request{
+        .url = path,
+    };
+
+    if (mem.eql(u8, path, "/image/")) {
+        rq.content_type = content_type.IMAGE;
+    }
+
+    _ = try rq.print();
+
+    return rq;
 }
 
 pub fn client_interract(client_stream: net.Stream) !u8 {
@@ -36,7 +66,8 @@ pub fn client_interract(client_stream: net.Stream) !u8 {
     var raw_buf: [BUFF_SIZE]u8 = undefined;
 
     _ = try client_stream.read(&raw_buf);
-    _ = try parse_http(raw_buf);
+    const rq: http_request = try parse_http(raw_buf);
+    _ = rq;
 
     const header = "HTTP/1.1 200 OK\r\n Date: Sun, 10 Dec 2077 12:13:37 CET\r\n Server: le_server/1.0 (lenux)\r\n Content-Type: text/html\r\n Connection: Closed\r\n\r\n <html><body><h1>Hello</h1></body></html>";
 
@@ -65,3 +96,18 @@ pub fn server_setup() !net.StreamServer {
 
     return server;
 }
+
+// pub fn read_file(file_path: []const u8) !void {
+//     var file = try std.fs.cwd().openFile(file_path, .{});
+//     defer file.close();
+//
+//     var buf_reader = std.io.bufferedReader(file.reader());
+//     var in_stream = buf_reader.reader();
+//     _ = in_stream;
+//     // in_stream.readBoundedBytes(comptime num_bytes: usize)
+// }
+
+// pub fn build_response() !void{
+//     const file_path = try std.fmt.bufPrint("./files/ {s}", .{ world });
+//
+// }
